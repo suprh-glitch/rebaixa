@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rede Nilo | Painel de Rebaixa de Preço</title>
+<style>
+  :root{
+    --amarelo-limao:#FCFC0A; --amarelo-ouro:#F9E109; --vermelho:#A61309; --vinho:#910702;
+    --azul-royal:#0C2E84; --azul-marinho:#072772; --grafite:#333333; --offwhite:#F7F7F5; --verde-ok:#1F8A4C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;background:var(--offwhite);color:var(--grafite);}
+  .screen{display:none;min-height:100vh;}
+  .screen.active{display:block;}
+
+  /* ---------- tela de login (reaproveita layout já validado) ---------- */
+  #screen-login{
+    display:flex;align-items:center;justify-content:center;padding:24px;
+    background:linear-gradient(160deg, var(--azul-marinho) 0%, #041b52 60%, #051436 100%);
+  }
+  #screen-login.active{display:flex;}
+  .login-box{width:100%;max-width:420px;background:#fff;border-radius:18px;padding:36px 34px;box-shadow:0 30px 60px rgba(0,0,0,.35);}
+  .login-box h1{font-size:20px;color:var(--azul-marinho);margin-bottom:4px;}
+  .login-box p.sub{font-size:12.5px;color:#777;margin-bottom:20px;}
+  label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;}
+  input,select,textarea{width:100%;padding:11px 13px;border-radius:9px;border:1.5px solid #DADAD6;font-size:14px;font-family:inherit;margin-bottom:14px;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--azul-royal);box-shadow:0 0 0 3px rgba(12,46,132,.12);}
+  .btn-primary{width:100%;background:linear-gradient(135deg,var(--amarelo-ouro),var(--amarelo-limao));color:var(--azul-marinho);border:none;border-radius:9px;padding:13px;font-size:14.5px;font-weight:700;cursor:pointer;}
+  .btn-ghost{width:100%;background:none;border:1.5px solid #DADAD6;border-radius:9px;padding:11px;font-size:13.5px;font-weight:600;color:var(--grafite);cursor:pointer;margin-top:8px;}
+  .link-btn{background:none;border:none;color:var(--azul-royal);font-size:12.5px;font-weight:600;cursor:pointer;}
+  .switch-line{text-align:center;font-size:13px;color:#666;margin-top:16px;}
+  .alert{border-radius:9px;padding:11px 13px;font-size:12.5px;margin-bottom:14px;}
+  .alert.error{background:#FCEAE8;color:var(--vinho);border:1px solid #EFB6AE;}
+  .alert.success{background:#E9F7EF;color:var(--verde-ok);border:1px solid #A9DEBE;}
+  .alert.warn{background:#FFF7DE;color:#6B5A00;border:1px solid #F0DE8A;}
+
+  /* ---------- app (formulário / painel) ---------- */
+  .topbar{background:linear-gradient(135deg,var(--azul-royal),var(--azul-marinho));color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;}
+  .topbar .brand{font-weight:800;font-size:14.5px;}
+  .topbar .user-chip{font-size:12px;background:rgba(255,255,255,.12);padding:6px 12px;border-radius:20px;cursor:pointer;}
+  .app-body{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
+  .card{background:#fff;border-radius:14px;border:1px solid #E7E7E3;padding:22px;margin-bottom:20px;}
+  .section-title{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--azul-royal);margin:18px 0 10px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+  .btn-mini{background:none;border:1.5px solid #DADAD6;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;}
+  .status-pill{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;}
+  .status-pill.aberto{background:#EAF0FE;color:var(--azul-royal);}
+  .status-pill.atendido{background:#E9F7EF;color:var(--verde-ok);}
+  .status-pill.naoatendido{background:#FCEAE8;color:var(--vinho);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;color:#888;font-size:11px;text-transform:uppercase;padding:10px;border-bottom:1px solid #eee;}
+  td{padding:10px;border-bottom:1px solid #f2f2f2;}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+
+<!-- ============ CONFIGURAÇÃO — troque pela URL do seu App da Web (Apps Script) ============ -->
+<script>
+  const CONFIG = {
+    API_URL: 'https://script.google.com/macros/s/AKfycbxe8Ci8p3XSU3iTHZbnCH4AeS0lGwzkcAsQ8gZiZnH89VkgalKDiO2kAMVC2p9GuQ1xyQ/exec'
+  };
+</script>
+
+<!-- ===================== TELA DE LOGIN / CADASTRO ===================== -->
+<div class="screen active" id="screen-login">
+  <div class="login-box">
+    <div id="login-view">
+      <h1>Rede Nilo</h1>
+      <p class="sub">Painel de Solicitação de Rebaixa de Preço</p>
+      <div id="login-alert"></div>
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="ex: joao.silva">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••">
+      <button class="btn-primary" onclick="doLogin()">Entrar</button>
+      <button class="btn-ghost" onclick="show('signup-view')">Criar conta (primeiro acesso)</button>
+      <p class="switch-line"><span class="link-btn" onclick="show('forgot-view')">Esqueci minha senha</span></p>
+    </div>
+
+    <div id="signup-view" class="hidden">
+      <h1>Primeiro acesso</h1>
+      <p class="sub">Defina usuário e senha. O acesso só é liberado após autorização do Master.</p>
+      <div id="signup-alert"></div>
+      <label>Nome completo</label><input type="text" id="su-nome">
+      <label>E-mail</label><input type="email" id="su-email">
+      <label>Loja</label>
+      <select id="su-loja"><option>Loja Centro</option><option>Loja Vila</option><option>Loja Nova Xavantina</option><option>Loja Querência</option></select>
+      <label>Usuário</label><input type="text" id="su-user">
+      <label>Senha</label><input type="password" id="su-pass">
+      <label>Confirmar senha</label><input type="password" id="su-pass2">
+      <button class="btn-primary" onclick="doSignup()">Solicitar acesso</button>
+      <button class="btn-ghost" onclick="show('login-view')">Voltar</button>
+    </div>
+
+    <div id="forgot-view" class="hidden">
+      <h1>Esqueci minha senha</h1>
+      <p class="sub">Enviaremos um link de redefinição para o e-mail cadastrado.</p>
+      <div id="forgot-alert"></div>
+      <label>E-mail cadastrado</label><input type="email" id="forgot-email">
+      <button class="btn-primary" onclick="doForgot()">Enviar link</button>
+      <button class="btn-ghost" onclick="show('login-view')">Voltar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP (COLABORADOR) ===================== -->
+<div class="screen" id="screen-colaborador">
+  <div class="topbar">
+    <div class="brand">REDE NILO · REBAIXA DE PREÇO</div>
+    <div class="user-chip" onclick="logout()" id="colab-user-chip">Sair</div>
+  </div>
+  <div class="app-body">
+    <div class="card">
+      <h2>Nova Solicitação de Rebaixa</h2>
+      <div id="demanda-alert"></div>
+      <div class="grid2">
+        <div><label>Loja origem</label><select id="dm-loja"><option>Loja Centro</option><option>Loja Vila</option><option>Loja Nova Xavantina</option><option>Loja Querência</option></select></div>
+        <div><label>Comprador</label><select id="dm-comprador"></select></div>
+      </div>
+      <div class="section-title">Produtos</div>
+      <div id="produtos-container"></div>
+      <button class="btn-ghost" onclick="addProduto()">➕ Adicionar outro produto</button>
+      <button class="btn-primary" style="margin-top:16px;" onclick="enviarDemanda()">Enviar solicitação</button>
+    </div>
+
+    <div class="card">
+      <h2>Minhas solicitações</h2>
+      <table><thead><tr><th>Loja</th><th>Comprador</th><th>Status</th><th>Aberta em</th></tr></thead>
+      <tbody id="minhas-demandas-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP (MASTER) ===================== -->
+<div class="screen" id="screen-master">
+  <div class="topbar">
+    <div class="brand">REDE NILO · PAINEL ADMINISTRATIVO</div>
+    <div class="user-chip" onclick="logout()" id="master-user-chip">Sair</div>
+  </div>
+  <div class="app-body">
+    <div class="card">
+      <h2>Usuários</h2>
+      <div id="users-alert"></div>
+      <table><thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead>
+      <tbody id="users-tbody"></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2>Todas as solicitações</h2>
+      <div id="master-demandas-alert"></div>
+      <table><thead><tr><th>Loja</th><th>Comprador</th><th>Status</th><th>Ação</th></tr></thead>
+      <tbody id="master-demandas-tbody"></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2>Log de acesso</h2>
+      <table><thead><tr><th>Data</th><th>Usuário</th><th>Ação</th><th>Detalhe</th></tr></thead>
+      <tbody id="log-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * INTEGRAÇÃO COM O BACKEND (Google Apps Script)
+ * ============================================================ */
+function fetchComTimeout_(url, options, timeoutMs){
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
+async function apiGet(action){
+  try{
+    const res = await fetchComTimeout_(`${CONFIG.API_URL}?action=${action}`, {}, 15000);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch(err){
+    console.error('apiGet falhou:', err);
+    const msg = err.name === 'AbortError'
+      ? 'O servidor demorou demais para responder (mais de 15s). Verifique se o deploy do Apps Script está ativo e com acesso "Qualquer pessoa".'
+      : 'Não foi possível conectar ao servidor (' + err.message + '). Verifique CONFIG.API_URL e se o deploy do Apps Script está ativo.';
+    return { erro: msg };
+  }
+}
+async function apiPost(payload){
+  try{
+    // content-type text/plain evita preflight CORS com o Apps Script
+    const res = await fetchComTimeout_(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }, 15000);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch(err){
+    console.error('apiPost falhou:', err);
+    const msg = err.name === 'AbortError'
+      ? 'O servidor demorou demais para responder (mais de 15s). Verifique se o deploy do Apps Script está ativo e com acesso "Qualquer pessoa".'
+      : 'Não foi possível conectar ao servidor (' + err.message + '). Verifique CONFIG.API_URL e se o deploy do Apps Script está ativo.';
+    return { ok:false, erro: msg };
+  }
+}
+
+let currentUser = null;
+
+function show(id){
+  ['login-view','signup-view','forgot-view'].forEach(v => document.getElementById(v).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function alertBox(slot, type, msg){
+  document.getElementById(slot).innerHTML = `<div class="alert ${type}">${msg}</div>`;
+}
+
+/* ---------- LOGIN / CADASTRO ---------- */
+async function doLogin(){
+  const usuario = document.getElementById('login-user').value.trim();
+  const senha = document.getElementById('login-pass').value;
+  if(!usuario || !senha){ alertBox('login-alert','error','Informe usuário e senha.'); return; }
+
+  alertBox('login-alert','warn','Entrando...');
+  const resp = await apiPost({ action:'login', usuario, senha });
+  if(!resp.ok){ alertBox('login-alert','error', resp.erro || 'Falha no login.'); return; }
+
+  currentUser = resp.usuario;
+  if(currentUser.perfil === 'master'){
+    document.getElementById('master-user-chip').textContent = currentUser.nome + ' · Sair';
+    showScreen('screen-master');
+    loadMasterData();
+  } else {
+    document.getElementById('colab-user-chip').textContent = currentUser.nome + ' · Sair';
+    showScreen('screen-colaborador');
+    loadColaboradorData();
+  }
+}
+
+async function doSignup(){
+  const nome = document.getElementById('su-nome').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const loja = document.getElementById('su-loja').value;
+  const usuario = document.getElementById('su-user').value.trim();
+  const senha = document.getElementById('su-pass').value;
+  const senha2 = document.getElementById('su-pass2').value;
+
+  if(!nome || !email || !usuario || !senha || !senha2){
+    alertBox('signup-alert','error','Preencha todos os campos.'); return;
+  }
+  if(senha.length < 8){ alertBox('signup-alert','error','A senha precisa ter no mínimo 8 caracteres.'); return; }
+  if(senha !== senha2){ alertBox('signup-alert','error','As senhas não coincidem.'); return; }
+
+  const resp = await apiPost({ action:'signup', nome, email, loja, usuario, senha });
+  if(!resp.ok){ alertBox('signup-alert','error', resp.erro); return; }
+
+  alertBox('signup-alert','success','Cadastro enviado! Usuário e senha já definidos — aguarde a autorização de um Master.');
+}
+
+async function doForgot(){
+  const email = document.getElementById('forgot-email').value.trim();
+  if(!email){ alertBox('forgot-alert','error','Informe o e-mail cadastrado.'); return; }
+  await apiPost({ action:'forgotPassword', email, appUrl: window.location.href });
+  alertBox('forgot-alert','success','Se o e-mail estiver cadastrado, um link de redefinição foi enviado.');
+}
+
+function logout(){
+  currentUser = null;
+  showScreen('screen-login');
+  show('login-view');
+}
+
+/* ---------- COLABORADOR: NOVA DEMANDA ---------- */
+let produtoCount = 0;
+function addProduto(){
+  produtoCount++;
+  const id = produtoCount;
+  const div = document.createElement('div');
+  div.className = 'grid2';
+  div.style.marginBottom = '10px';
+  div.id = 'produto-' + id;
+  div.innerHTML = `
+    <div><label>Código de barras</label><input type="text" class="p-codigo" placeholder="EAN"></div>
+    <div><label>Quantidade</label><input type="number" class="p-qtd" min="1"></div>
+    <div style="grid-column:1/-1;"><label>Descrição</label><input type="text" class="p-desc"></div>
+    <div><label>Motivo</label><select class="p-motivo"><option>Vencimento próximo</option><option>Avaria na embalagem</option><option>Baixo giro / encalhe</option><option>Concorrência de preço</option></select></div>
+    <div><label>Data de vencimento</label><input type="date" class="p-venc"></div>
+  `;
+  document.getElementById('produtos-container').appendChild(div);
+}
+
+async function enviarDemanda(){
+  const loja = document.getElementById('dm-loja').value;
+  const comprador = document.getElementById('dm-comprador').value;
+  const itens = Array.from(document.querySelectorAll('#produtos-container > div')).map(div => ({
+    codigoBarras: div.querySelector('.p-codigo').value,
+    quantidade: div.querySelector('.p-qtd').value,
+    descricao: div.querySelector('.p-desc').value,
+    motivo: div.querySelector('.p-motivo').value,
+    dataVencimento: div.querySelector('.p-venc').value,
+  }));
+
+  if(itens.length === 0){ alertBox('demanda-alert','error','Adicione ao menos um produto.'); return; }
+
+  const resp = await apiPost({
+    action:'createDemanda', loja, comprador, solicitante: currentUser.nome,
+    urgencia:'low', itens
+  });
+  if(!resp.ok){ alertBox('demanda-alert','error', resp.erro || 'Erro ao enviar.'); return; }
+
+  alertBox('demanda-alert','success','Solicitação enviada! O comprador foi notificado por e-mail.');
+  document.getElementById('produtos-container').innerHTML = '';
+  produtoCount = 0;
+  loadColaboradorData();
+}
+
+async function loadColaboradorData(){
+  const users = await apiGet('listUsers');
+  const compradores = users.filter(u => u.perfil === 'master' || u.loja === '—');
+  document.getElementById('dm-comprador').innerHTML = compradores.map(c => `<option>${c.nome}</option>`).join('');
+
+  const demandas = await apiGet('listDemandas');
+  const minhas = demandas.filter(d => d.solicitante === currentUser.nome);
+  document.getElementById('minhas-demandas-tbody').innerHTML = minhas.map(d => `
+    <tr><td>${d.loja}</td><td>${d.comprador}</td>
+    <td><span class="status-pill ${d.status}">${d.status}</span></td>
+    <td>${new Date(d.dataAbertura).toLocaleDateString('pt-BR')}</td></tr>
+  `).join('') || '<tr><td colspan="4">Nenhuma solicitação ainda.</td></tr>';
+}
+
+/* ---------- MASTER: USUÁRIOS E DEMANDAS ---------- */
+async function loadMasterData(){
+  const users = await apiGet('listUsers');
+  document.getElementById('users-tbody').innerHTML = users.map(u => `
+    <tr><td>${u.nome}</td><td>${u.usuario}</td><td>${u.perfil}</td>
+    <td><span class="status-pill ${u.status === 'ativo' ? 'atendido' : 'aberto'}">${u.status}</span></td>
+    <td>${u.status === 'pendente'
+      ? `<button class="btn-mini" onclick="approveUser('${u.id}')">Autorizar</button>`
+      : `<button class="btn-mini" onclick="revokeUser('${u.id}')">Revogar</button>`}</td></tr>
+  `).join('');
+
+  const demandas = await apiGet('listDemandas');
+  document.getElementById('master-demandas-tbody').innerHTML = demandas.map(d => `
+    <tr><td>${d.loja}</td><td>${d.comprador}</td>
+    <td><span class="status-pill ${d.status}">${d.status}</span></td>
+    <td>${d.status !== 'atendido' ? `<button class="btn-mini" onclick="responder('${d.id}')">Responder</button>` : '—'}</td></tr>
+  `).join('');
+
+  const log = await apiGet('listLog');
+  document.getElementById('log-tbody').innerHTML = log.slice(0, 30).map(l => `
+    <tr><td>${new Date(l.data).toLocaleString('pt-BR')}</td><td>${l.usuario}</td><td>${l.acao}</td><td>${l.detalhe}</td></tr>
+  `).join('');
+}
+
+async function approveUser(id){
+  await apiPost({ action:'approveUser', id });
+  alertBox('users-alert','success','Usuário autorizado. E-mail de confirmação enviado.');
+  loadMasterData();
+}
+async function revokeUser(id){
+  await apiPost({ action:'revokeUser', id });
+  alertBox('users-alert','success','Acesso revogado.');
+  loadMasterData();
+}
+
+async function responder(id){
+  const tipo = confirm('Clique OK para ATENDER a rebaixa, ou Cancelar para marcar como NÃO ATENDIDA.') ? 'atendido' : 'naoatendido';
+  let preco = '', validade = '', observacao = '';
+  if(tipo === 'atendido'){
+    preco = prompt('Novo preço (R$):') || '';
+    observacao = prompt('Observações / condições:') || '';
+  } else {
+    observacao = prompt('Motivo da recusa:') || '';
+  }
+  const resp = await apiPost({ action:'respondDemanda', id, tipo, preco, validade, observacao, comprador: currentUser.nome });
+  if(!resp.ok){ alertBox('master-demandas-alert','error', resp.erro); return; }
+  alertBox('master-demandas-alert','success','Resposta enviada. E-mail disparado para a origem da solicitação.');
+  loadMasterData();
+}
+</script>
+</body>
+</html>
