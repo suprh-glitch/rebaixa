@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rede Nilo | Painel de Rebaixa de Preço</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --amarelo-limao:#FCFC0A; --amarelo-ouro:#F9E109; --vermelho:#A61309; --vinho:#910702;
+    --azul-royal:#0C2E84; --azul-marinho:#072772; --grafite:#333333; --offwhite:#F7F7F5; --verde-ok:#1F8A4C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;background:var(--offwhite);color:var(--grafite);}
+  .screen{display:none;min-height:100vh;}
+  .screen.active{display:block;}
+  .hidden{display:none !important;}
+
+  /* ---------- login ---------- */
+  #screen-login.active{
+    display:flex;align-items:center;justify-content:center;padding:24px;min-height:100vh;
+    background:linear-gradient(160deg, var(--azul-marinho) 0%, #041b52 60%, #051436 100%);
+  }
+  .login-box{width:100%;max-width:420px;background:#fff;border-radius:18px;padding:36px 34px;box-shadow:0 30px 60px rgba(0,0,0,.35);}
+  .brand-mark{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+  .brand-mark .dot{width:14px;height:14px;border-radius:4px;background:var(--amarelo-limao);box-shadow:0 0 0 3px rgba(12,46,132,.10);}
+  .brand-mark span{font-weight:800;font-size:17px;color:var(--azul-marinho);letter-spacing:.3px;}
+  .login-box p.sub{font-size:12.5px;color:#777;margin-bottom:20px;}
+  label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;}
+  input,select,textarea{width:100%;padding:11px 13px;border-radius:9px;border:1.5px solid #DADAD6;font-size:14px;font-family:inherit;margin-bottom:14px;background:#fff;color:var(--grafite);}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--azul-royal);box-shadow:0 0 0 3px rgba(12,46,132,.12);}
+  .pw-wrap{position:relative;}
+  .pw-toggle{position:absolute;right:12px;top:13px;font-size:11.5px;color:var(--azul-royal);cursor:pointer;font-weight:600;}
+  .btn-primary{width:100%;background:linear-gradient(135deg,var(--amarelo-ouro),var(--amarelo-limao));color:var(--azul-marinho);border:none;border-radius:9px;padding:13px;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(249,225,9,.28);}
+  .btn-primary:hover{transform:translateY(-1px);}
+  .btn-ghost{width:100%;background:none;border:1.5px solid #DADAD6;border-radius:9px;padding:11px;font-size:13.5px;font-weight:600;color:var(--grafite);cursor:pointer;margin-top:8px;}
+  .btn-ghost:hover{border-color:var(--azul-royal);color:var(--azul-royal);}
+  .link-btn{background:none;border:none;color:var(--azul-royal);font-size:12.5px;font-weight:600;cursor:pointer;}
+  .switch-line{text-align:center;font-size:13px;color:#666;margin-top:16px;}
+  .row-between{display:flex;justify-content:space-between;align-items:center;margin:-4px 0 14px;}
+  .checkline{display:flex;align-items:center;gap:6px;font-size:12px;color:#666;}
+  .alert{border-radius:9px;padding:11px 13px;font-size:12.5px;margin-bottom:14px;}
+  .alert.error{background:#FCEAE8;color:var(--vinho);border:1px solid #EFB6AE;}
+  .alert.success{background:#E9F7EF;color:var(--verde-ok);border:1px solid #A9DEBE;}
+  .alert.warn{background:#FFF7DE;color:#6B5A00;border:1px solid #F0DE8A;}
+
+  /* ---------- app shell ---------- */
+  .topbar{background:linear-gradient(135deg,var(--azul-royal),var(--azul-marinho));color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+  .topbar .brand{font-weight:800;font-size:14px;display:flex;align-items:center;gap:9px;}
+  .topbar .brand .dot{width:11px;height:11px;border-radius:3px;background:var(--amarelo-limao);}
+  .topbar-actions{display:flex;align-items:center;gap:10px;}
+  .btn-mini{background:none;border:1.5px solid #DADAD6;border-radius:8px;padding:7px 13px;font-size:11.5px;font-weight:700;cursor:pointer;}
+  .btn-mini.topbar-btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff;}
+  .btn-mini.topbar-btn:hover{background:rgba(255,255,255,.2);}
+  .user-chip{font-size:12px;background:rgba(255,255,255,.14);padding:7px 13px;border-radius:20px;cursor:pointer;}
+  .app-body{max-width:1000px;margin:0 auto;padding:24px 16px 60px;}
+  .card{background:#fff;border-radius:14px;border:1px solid #E7E7E3;padding:22px;margin-bottom:20px;box-shadow:0 8px 20px rgba(7,39,114,.05);}
+  .card h2{font-size:17px;color:var(--azul-marinho);margin-bottom:14px;}
+  .section-title{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--azul-royal);margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
+  .section-title::after{content:"";flex:1;height:1px;background:#EAEAE6;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  .select-row{display:flex;gap:8px;align-items:flex-start;}
+  .select-row select{flex:1;}
+  .btn-add-inline{flex-shrink:0;width:42px;height:42px;border-radius:9px;border:1.5px solid var(--azul-royal);background:#fff;color:var(--azul-royal);font-size:16px;font-weight:800;cursor:pointer;}
+  .btn-add-inline:hover{background:var(--azul-royal);color:#fff;}
+
+  /* ---------- produtos multi-item ---------- */
+  .product-card{background:var(--offwhite);border:1.5px solid #E7E7E3;border-radius:14px;padding:18px 18px 14px;margin-bottom:16px;}
+  .product-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .product-card-head .p-title{font-size:13px;font-weight:800;color:var(--azul-marinho);display:flex;align-items:center;gap:8px;}
+  .p-num{width:21px;height:21px;border-radius:50%;background:var(--azul-royal);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .btn-remove-product{background:none;border:none;color:var(--vermelho);font-size:11.5px;font-weight:700;cursor:pointer;}
+  .btn-add-product{width:100%;background:#fff;border:1.5px dashed var(--azul-royal);color:var(--azul-royal);border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+  .btn-add-product:hover{background:#EFF3FC;}
+  .barcode-row{display:flex;gap:9px;align-items:flex-start;}
+  .barcode-row > div:first-child{flex:1;}
+  .btn-scan{flex-shrink:0;margin-top:0;background:var(--azul-royal);color:#fff;border:none;border-radius:9px;padding:11px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .btn-scan:hover{background:var(--azul-marinho);}
+  .hint{font-size:11px;color:#999;margin-top:-8px;margin-bottom:12px;}
+  .barcode-preview{margin-top:-6px;margin-bottom:12px;background:#fff;border:1px dashed #D7D7D1;border-radius:10px;padding:12px;display:none;align-items:center;gap:12px;}
+  .barcode-preview.show{display:flex;}
+  .barcode-preview svg{flex-shrink:0;}
+  .barcode-preview b{display:block;font-size:13px;color:var(--azul-marinho);}
+  .barcode-preview span{font-size:11.5px;color:#777;}
+  .urgency-options,.due-preview{margin-top:2px;}
+  .due-pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:20px;}
+  .due-pill .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .due-pill.ok{background:#E9F7EF;color:var(--verde-ok);}
+  .due-pill.ok .dot{background:var(--verde-ok);}
+  .due-pill.warn{background:#FFF7DE;color:#8A6D00;}
+  .due-pill.warn .dot{background:#E0A400;}
+  .due-pill.urgent{background:#FCEAE8;color:var(--vinho);}
+  .due-pill.urgent .dot{background:var(--vermelho);animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(166,19,9,.5);}50%{opacity:.35;box-shadow:0 0 0 6px rgba(166,19,9,0);}}
+  .due-empty{font-size:11.5px;color:#999;}
+
+  /* ---------- anexos / câmera ---------- */
+  .attach-actions{display:flex;gap:10px;margin-top:4px;}
+  .dropzone{border:1.5px dashed #C9C9C3;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#fff;font-size:12.5px;color:#777;}
+  .dropzone:hover{border-color:var(--azul-royal);background:#EFF3FC;}
+  .file-list{display:flex;flex-direction:column;gap:7px;margin-top:10px;}
+  .file-chip{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid #E2E2DE;border-radius:8px;padding:7px 11px;font-size:12px;}
+  .file-chip img{width:28px;height:28px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle;}
+  .file-chip .remove{color:var(--vermelho);cursor:pointer;font-weight:700;}
+  .cam-overlay{display:none;position:fixed;inset:0;background:rgba(7,39,114,.85);z-index:999;align-items:center;justify-content:center;padding:20px;}
+  .cam-overlay.show{display:flex;}
+  .cam-box{background:#111;border-radius:16px;overflow:hidden;max-width:480px;width:100%;}
+  .cam-box video,.cam-box canvas{width:100%;display:block;background:#000;}
+  .cam-box canvas{display:none;}
+  .cam-hint{color:#fff;font-size:12px;text-align:center;padding:10px 14px 0;}
+  .cam-error{color:#fff;font-size:12.5px;padding:20px;text-align:center;}
+  .cam-controls{display:flex;gap:10px;padding:14px;background:#1a1a1a;}
+  .cam-controls button{flex:1;border:none;border-radius:9px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-cam-shot{background:linear-gradient(135deg,var(--amarelo-ouro),var(--amarelo-limao));color:var(--azul-marinho);}
+  .btn-cam-cancel,.btn-cam-retake{background:#333;color:#fff;}
+  .btn-cam-use{background:var(--verde-ok);color:#fff;}
+
+  /* ---------- tabelas ---------- */
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{text-align:left;color:#888;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;padding:10px;border-bottom:1px solid #eee;background:var(--offwhite);}
+  tbody td{padding:10px;border-bottom:1px solid #f2f2f2;vertical-align:middle;}
+  tbody tr.clickable{cursor:pointer;}
+  tbody tr.clickable:hover{background:#F2F5FC;}
+  .status-pill{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;}
+  .status-pill.aberto{background:#EAF0FE;color:var(--azul-royal);}
+  .status-pill.atendido{background:#E9F7EF;color:var(--verde-ok);}
+  .status-pill.naoatendido{background:#FCEAE8;color:var(--vinho);}
+  .role-badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;}
+  .role-badge.master{background:#E9F7EF;color:var(--verde-ok);}
+  .role-badge.colaborador{background:#EAF0FE;color:var(--azul-royal);}
+  .empty-state{text-align:center;padding:24px;color:#999;font-size:12.5px;}
+
+  /* ---------- tabs admin ---------- */
+  .tabs{display:flex;gap:4px;background:#fff;border-bottom:1px solid #E7E7E3;padding:0 22px;overflow-x:auto;}
+  .tab-btn{padding:14px 16px;font-size:13px;font-weight:700;color:#888;background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;}
+  .tab-btn.active{color:var(--azul-marinho);border-bottom-color:var(--amarelo-ouro);}
+  .tab-btn .badge{background:var(--vermelho);color:#fff;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:10px;margin-left:5px;}
+  .adminview{display:none;}
+  .adminview.active{display:block;}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr);}}
+  .kpi{background:#fff;border:1px solid #E7E7E3;border-radius:14px;padding:15px 16px;}
+  .kpi .kpi-num{font-size:22px;font-weight:800;color:var(--azul-marinho);}
+  .kpi .kpi-label{font-size:11px;color:#888;margin-top:2px;}
+  .kpi.alert .kpi-num{color:var(--vermelho);}
+  .filters{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .filters select{margin:0;padding:8px 11px;font-size:12px;width:auto;}
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:840px){.charts-grid{grid-template-columns:1fr;}}
+  .chart-card{background:#fff;border:1px solid #E7E7E3;border-radius:14px;padding:16px 16px 8px;}
+  .chart-card.full{grid-column:1/-1;}
+  .chart-card h4{font-size:11.5px;font-weight:800;color:var(--azul-marinho);text-transform:uppercase;margin-bottom:2px;}
+  .chart-card p{font-size:10.5px;color:#999;margin-bottom:10px;}
+  .chart-wrap{position:relative;height:230px;}
+  .chart-card.full .chart-wrap{height:270px;}
+
+  /* ---------- modais ---------- */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(7,39,114,.55);z-index:998;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal-box{background:#fff;border-radius:16px;max-width:460px;width:100%;padding:26px;box-shadow:0 20px 50px rgba(0,0,0,.25);position:relative;}
+  .modal-box.wide{max-width:640px;max-height:88vh;overflow-y:auto;}
+  .modal-box h3{font-size:16px;color:var(--azul-marinho);margin-bottom:6px;}
+  .modal-box p.sub{font-size:12px;color:#777;margin-bottom:14px;line-height:1.5;}
+  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;color:#999;cursor:pointer;}
+  .modal-actions{display:flex;gap:10px;margin-top:6px;}
+  .modal-actions button{flex:1;}
+  .respond-options{display:flex;gap:10px;margin-bottom:14px;}
+  .respond-opt{flex:1;text-align:center;padding:12px 8px;border-radius:10px;border:1.5px solid #DADAD6;font-size:12px;font-weight:700;cursor:pointer;color:#888;}
+  .respond-opt input{display:none;}
+  .respond-opt:has(input:checked).positivo{background:#E9F7EF;color:var(--verde-ok);border-color:var(--verde-ok);}
+  .respond-opt:has(input:checked).negativo{background:#FCEAE8;color:var(--vinho);border-color:var(--vermelho);}
+  .respond-fields{display:none;}
+  .respond-fields.show{display:block;}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-bottom:16px;}
+  @media(max-width:480px){.detail-grid{grid-template-columns:1fr;}}
+  .detail-item .di-label{font-size:10px;text-transform:uppercase;color:#999;font-weight:700;margin-bottom:2px;}
+  .detail-item .di-value{font-size:13px;color:var(--grafite);font-weight:600;}
+  .detail-obs{background:var(--offwhite);border:1px solid #EAEAE6;border-radius:10px;padding:11px 13px;font-size:12.5px;line-height:1.5;margin-bottom:14px;}
+  .detail-photos{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .detail-photos .ph{width:70px;height:70px;border-radius:9px;overflow:hidden;border:1px solid #E2E2DE;background:var(--offwhite);}
+  .detail-photos .ph img{width:100%;height:100%;object-fit:cover;}
+  .comment{background:var(--offwhite);border-radius:9px;padding:9px 11px;font-size:12px;margin-bottom:8px;}
+  .comment .c-meta{font-size:10px;color:#999;font-weight:700;margin-bottom:2px;}
+</style>
+</head>
+<body>
+
+<script>
+  const CONFIG = { API_URL: 'https://script.google.com/macros/s/AKfycbxe8Ci8p3XSU3iTHZbnCH4AeS0lGwzkcAsQ8gZiZnH89VkgalKDiO2kAMVC2p9GuQ1xyQ/exec' };
+</script>
+
+<!-- ===================== LOGIN / CADASTRO ===================== -->
+<div class="screen active" id="screen-login">
+  <div class="login-box">
+    <div id="login-view">
+      <div class="brand-mark"><span class="dot"></span><span>REDE NILO</span></div>
+      <p class="sub">Painel de Solicitação de Rebaixa de Preço</p>
+      <div id="login-alert"></div>
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="ex: mahilton">
+      <label>Senha</label>
+      <div class="pw-wrap">
+        <input type="password" id="login-pass" placeholder="••••••••">
+        <span class="pw-toggle" onclick="togglePw('login-pass',this)">mostrar</span>
+      </div>
+      <div class="row-between">
+        <label class="checkline"><input type="checkbox" style="width:auto;margin:0;"> Manter conectado</label>
+        <span class="link-btn" onclick="show('forgot-view')">Esqueci minha senha</span>
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Entrar</button>
+      <button class="btn-ghost" onclick="show('signup-view')">Criar conta (primeiro acesso)</button>
+    </div>
+
+    <div id="signup-view" class="hidden">
+      <div class="brand-mark"><span class="dot"></span><span>Primeiro acesso</span></div>
+      <p class="sub">Defina usuário e senha agora. O acesso só é liberado após autorização de um Master.</p>
+      <div id="signup-alert"></div>
+      <label>Nome completo</label><input type="text" id="su-nome">
+      <label>E-mail</label><input type="email" id="su-email">
+      <label>Loja</label>
+      <select id="su-loja"><option>Loja Centro</option><option>Loja Vila</option><option>Loja Nova Xavantina</option><option>Loja Querência</option></select>
+      <label>Usuário</label><input type="text" id="su-user">
+      <label>Senha</label>
+      <div class="pw-wrap"><input type="password" id="su-pass" placeholder="Mínimo 8 caracteres"><span class="pw-toggle" onclick="togglePw('su-pass',this)">mostrar</span></div>
+      <label>Confirmar senha</label>
+      <div class="pw-wrap"><input type="password" id="su-pass2"><span class="pw-toggle" onclick="togglePw('su-pass2',this)">mostrar</span></div>
+      <button class="btn-primary" onclick="doSignup()">Definir senha e solicitar acesso</button>
+      <button class="btn-ghost" onclick="show('login-view')">Voltar ao login</button>
+    </div>
+
+    <div id="forgot-view" class="hidden">
+      <div class="brand-mark"><span class="dot"></span><span>Recuperar acesso</span></div>
+      <p class="sub">Enviaremos um link de redefinição para o e-mail cadastrado.</p>
+      <div id="forgot-alert"></div>
+      <label>E-mail cadastrado</label><input type="email" id="forgot-email">
+      <button class="btn-primary" onclick="doForgot()">Enviar link</button>
+      <button class="btn-ghost" onclick="show('login-view')">Voltar ao login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAINEL DE SOLICITAÇÕES (colaborador / todo login) ===================== -->
+<div class="screen" id="screen-colaborador">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>REDE NILO · REBAIXA DE PREÇO</div>
+    <div class="topbar-actions">
+      <button class="btn-mini topbar-btn hidden" id="btn-ir-admin" onclick="abrirAdmin()">⚙️ Painel administrativo</button>
+      <div class="user-chip" onclick="logout()" id="colab-user-chip">Sair</div>
+    </div>
+  </div>
+  <div class="app-body">
+    <div class="card">
+      <h2>Nova solicitação de rebaixa</h2>
+      <div id="demanda-alert"></div>
+
+      <div class="section-title">Identificação</div>
+      <div class="grid2">
+        <div>
+          <label>Loja origem</label>
+          <div class="select-row">
+            <select id="dm-loja"><option>Loja Centro</option><option>Loja Vila</option><option>Loja Nova Xavantina</option><option>Loja Querência</option></select>
+            <button class="btn-add-inline" type="button" onclick="addNewOption('dm-loja','Digite o nome da nova loja')">➕</button>
+          </div>
+        </div>
+        <div>
+          <label>Comprador</label>
+          <div class="select-row">
+            <select id="dm-comprador"></select>
+            <button class="btn-add-inline" type="button" onclick="addNewOption('dm-comprador','Digite nome e setor do comprador (ex: Pedro Alves — Bebidas)')">➕</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Produtos</div>
+      <div id="produtos-container"></div>
+      <button class="btn-add-product" type="button" onclick="addProduto()">➕ Adicionar outro produto</button>
+      <p class="hint" style="margin-top:0;">Inclua quantos produtos precisar nesta mesma solicitação.</p>
+
+      <div class="section-title">Evidências</div>
+      <div class="dropzone" onclick="document.getElementById('file-input').click()">📎 Clique para anexar arquivos ou tire uma foto</div>
+      <input type="file" id="file-input" multiple accept="image/*,.pdf" style="display:none" onchange="handleFiles(this.files)">
+      <div class="attach-actions">
+        <button class="btn-mini" type="button" onclick="document.getElementById('file-input').click()">📁 Escolher arquivo</button>
+        <button class="btn-mini" type="button" onclick="openCamera('photo', null)">📷 Tirar foto</button>
+      </div>
+      <div class="file-list" id="file-list"></div>
+
+      <button class="btn-primary" style="margin-top:18px;" onclick="enviarDemanda()">Enviar solicitação ao comprador</button>
+    </div>
+
+    <div class="card">
+      <h2>Minhas solicitações</h2>
+      <table><thead><tr><th>Loja</th><th>Comprador</th><th>Status</th><th>Vencimento</th></tr></thead>
+      <tbody id="minhas-demandas-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAINEL ADMINISTRATIVO (master) ===================== -->
+<div class="screen" id="screen-master">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>REDE NILO · PAINEL ADMINISTRATIVO</div>
+    <div class="topbar-actions">
+      <button class="btn-mini topbar-btn" onclick="showScreen('screen-colaborador'); loadColaboradorData();">📋 Painel de solicitações</button>
+      <div class="user-chip" onclick="logout()" id="master-user-chip">Sair</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-btn-cadastro" onclick="showAdminTab('cadastro')">👤 Cadastro de usuários</button>
+    <button class="tab-btn" id="tab-btn-controle" onclick="showAdminTab('controle')">📋 Controle de demandas <span class="badge" id="pending-badge"></span></button>
+    <button class="tab-btn" id="tab-btn-indicadores" onclick="showAdminTab('indicadores')">📊 Indicadores</button>
+  </div>
+
+  <div class="app-body">
+
+    <!-- ---- CADASTRO ---- -->
+    <div class="adminview active" id="adminview-cadastro">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+          <h2 style="margin:0;">Usuários do sistema</h2>
+          <button class="btn-mini" style="border-color:var(--azul-royal);color:var(--azul-royal);" onclick="openNewUserModal()">➕ Novo usuário</button>
+        </div>
+        <div id="users-alert"></div>
+        <table><thead><tr><th>Nome</th><th>E-mail</th><th>Usuário</th><th>Perfil</th><th>Loja</th><th>Status</th><th style="text-align:right;">Ação</th></tr></thead>
+        <tbody id="users-tbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ---- CONTROLE DE DEMANDAS ---- -->
+    <div class="adminview" id="adminview-controle">
+      <div class="filters">
+        <select id="filter-loja" onchange="renderDemandas()"><option value="">Todas as lojas</option></select>
+        <select id="filter-comprador" onchange="renderDemandas()"><option value="">Todos os compradores</option></select>
+        <select id="filter-status" onchange="renderDemandas()">
+          <option value="">Todos os status</option><option value="aberto">Aberto</option><option value="atendido">Atendido</option><option value="naoatendido">Não atendido</option>
+        </select>
+      </div>
+      <div id="controle-alert"></div>
+
+      <div class="card">
+        <h2 style="font-size:14px;">Em aberto</h2>
+        <table><thead><tr><th>Loja</th><th>Comprador</th><th>Urgência</th><th>Prazo (48h)</th><th>Vencimento</th><th style="text-align:right;">Ações</th></tr></thead>
+        <tbody id="demandas-abertas-tbody"></tbody></table>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size:14px;">Atendidas / não atendidas</h2>
+        <table><thead><tr><th>Loja</th><th>Comprador</th><th>Status</th><th>Vencimento</th><th style="text-align:right;">Ações</th></tr></thead>
+        <tbody id="demandas-fechadas-tbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ---- INDICADORES ---- -->
+    <div class="adminview" id="adminview-indicadores">
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-num" id="ind-total">—</div><div class="kpi-label">Total de solicitações</div></div>
+        <div class="kpi"><div class="kpi-num" id="ind-taxa">—</div><div class="kpi-label">Taxa de atendimento</div></div>
+        <div class="kpi"><div class="kpi-num" id="ind-lojas">—</div><div class="kpi-label">Lojas com solicitações</div></div>
+        <div class="kpi alert"><div class="kpi-num" id="ind-urgentes">—</div><div class="kpi-label">Vencendo em até 7 dias</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><h4>Solicitações por loja</h4><p>Volume por unidade</p><div class="chart-wrap"><canvas id="chart-loja"></canvas></div></div>
+        <div class="chart-card"><h4>Solicitações por comprador</h4><p>Carga por comprador</p><div class="chart-wrap"><canvas id="chart-comprador"></canvas></div></div>
+        <div class="chart-card"><h4>Status</h4><p>Aberto, atendido, não atendido</p><div class="chart-wrap"><canvas id="chart-status"></canvas></div></div>
+        <div class="chart-card"><h4>Motivo da rebaixa</h4><p>Principais causas</p><div class="chart-wrap"><canvas id="chart-motivo"></canvas></div></div>
+        <div class="chart-card full"><h4>Produtos mais solicitados</h4><p>Por unidades em pedidos</p><div class="chart-wrap"><canvas id="chart-produtos"></canvas></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== MODAL: DETALHES ===================== -->
+<div class="modal-overlay" id="modal-detail"><div class="modal-box wide" id="detail-content"></div></div>
+
+<!-- ===================== MODAL: RESPONDER ===================== -->
+<div class="modal-overlay" id="modal-respond">
+  <div class="modal-box">
+    <h3>Responder solicitação</h3>
+    <p class="sub" id="respond-sub">O solicitante será avisado por e-mail automaticamente.</p>
+    <div class="respond-options">
+      <label class="respond-opt positivo"><input type="radio" name="respond-type" value="atendido" checked onchange="toggleRespondFields()">✅ Atender</label>
+      <label class="respond-opt negativo"><input type="radio" name="respond-type" value="naoatendido" onchange="toggleRespondFields()">🚫 Não atender</label>
+    </div>
+    <div class="respond-fields show" id="fields-positivo">
+      <div class="grid2">
+        <div><label>Novo preço (R$)</label><input type="text" id="rs-preco" placeholder="Ex: 4,99"></div>
+        <div><label>Validade da rebaixa</label><input type="date" id="rs-validade"></div>
+      </div>
+      <label>Condições / observações</label>
+      <textarea id="rs-obs-positivo" rows="3"></textarea>
+    </div>
+    <div class="respond-fields" id="fields-negativo">
+      <label>Motivo da recusa</label>
+      <textarea id="rs-obs-negativo" rows="4"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-respond')">Cancelar</button>
+      <button class="btn-primary" onclick="confirmRespond()">Enviar resposta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: REDIRECIONAR ===================== -->
+<div class="modal-overlay" id="modal-redirect">
+  <div class="modal-box">
+    <h3>Redirecionar solicitação</h3>
+    <p class="sub">Solicitante e os dois compradores envolvidos recebem e-mail do direcionamento.</p>
+    <label>Novo comprador responsável</label>
+    <select id="rd-comprador"></select>
+    <label>Observação (opcional)</label>
+    <textarea id="rd-obs" rows="3"></textarea>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-redirect')">Cancelar</button>
+      <button class="btn-primary" onclick="confirmRedirect()">Confirmar redirecionamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: NOVO USUÁRIO ===================== -->
+<div class="modal-overlay" id="modal-new-user">
+  <div class="modal-box">
+    <h3>Cadastrar usuário</h3>
+    <p class="sub">Criado e autorizado direto pelo Master.</p>
+    <label>Nome completo</label><input type="text" id="nu-nome">
+    <label>E-mail</label><input type="email" id="nu-email">
+    <label>Usuário</label><input type="text" id="nu-user">
+    <label>Perfil</label>
+    <select id="nu-perfil"><option value="colaborador">Colaborador</option><option value="master">Master</option></select>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-new-user')">Cancelar</button>
+      <button class="btn-primary" onclick="createUser()">Cadastrar e autorizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL DA CÂMERA ===================== -->
+<div class="cam-overlay" id="cam-overlay">
+  <div class="cam-box">
+    <div id="cam-error-slot"></div>
+    <p class="cam-hint" id="cam-hint">Enquadre a evidência do produto e capture.</p>
+    <video id="cam-video" autoplay playsinline></video>
+    <canvas id="cam-canvas"></canvas>
+    <div class="cam-controls" id="cam-controls-live">
+      <button class="btn-cam-cancel" type="button" onclick="closeCamera()">Cancelar</button>
+      <button class="btn-cam-shot" type="button" onclick="takeShot()">📸 Capturar</button>
+    </div>
+    <div class="cam-controls" id="cam-controls-review" style="display:none;">
+      <button class="btn-cam-retake" type="button" onclick="retakeShot()">↺ Tirar novamente</button>
+      <button class="btn-cam-use" type="button" onclick="useShot()">✅ Usar foto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * API
+ * ============================================================ */
+function fetchComTimeout_(url, options, timeoutMs){
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+async function apiGet(action){
+  try{
+    const res = await fetchComTimeout_(`${CONFIG.API_URL}?action=${action}`, {}, 15000);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch(err){
+    console.error('apiGet falhou:', err);
+    return { erro: err.name === 'AbortError' ? 'Tempo esgotado ao conectar ao servidor.' : ('Falha ao conectar: ' + err.message) };
+  }
+}
+async function apiPost(payload){
+  try{
+    const res = await fetchComTimeout_(CONFIG.API_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload)
+    }, 15000);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch(err){
+    console.error('apiPost falhou:', err);
+    return { ok:false, erro: err.name === 'AbortError' ? 'Tempo esgotado ao conectar ao servidor.' : ('Falha ao conectar: ' + err.message) };
+  }
+}
+
+let currentUser = null;
+let allDemandas = [];
+let allUsers = [];
+
+function show(id){ ['login-view','signup-view','forgot-view'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function alertBox(slot,type,msg){ document.getElementById(slot).innerHTML = `<div class="alert ${type}">${msg}</div>`; }
+function togglePw(id,el){ const i=document.getElementById(id); const isPw=i.type==='password'; i.type=isPw?'text':'password'; el.textContent=isPw?'ocultar':'mostrar'; }
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+/* ============================================================
+ * LOGIN / CADASTRO
+ * ============================================================ */
+async function doLogin(){
+  const usuario = document.getElementById('login-user').value.trim();
+  const senha = document.getElementById('login-pass').value;
+  if(!usuario || !senha){ alertBox('login-alert','error','Informe usuário e senha.'); return; }
+  alertBox('login-alert','warn','Entrando...');
+  const resp = await apiPost({ action:'login', usuario, senha });
+  if(!resp.ok){ alertBox('login-alert','error', resp.erro || 'Falha no login.'); return; }
+
+  currentUser = resp.usuario;
+  document.getElementById('master-user-chip').textContent = currentUser.nome + ' · Sair';
+  document.getElementById('colab-user-chip').textContent = currentUser.nome + ' · Sair';
+  document.getElementById('btn-ir-admin').classList.toggle('hidden', currentUser.perfil !== 'master');
+
+  showScreen('screen-colaborador');
+  loadColaboradorData();
+}
+
+async function doSignup(){
+  const nome=document.getElementById('su-nome').value.trim();
+  const email=document.getElementById('su-email').value.trim();
+  const loja=document.getElementById('su-loja').value;
+  const usuario=document.getElementById('su-user').value.trim();
+  const senha=document.getElementById('su-pass').value;
+  const senha2=document.getElementById('su-pass2').value;
+  if(!nome||!email||!usuario||!senha||!senha2){ alertBox('signup-alert','error','Preencha todos os campos.'); return; }
+  if(senha.length<8){ alertBox('signup-alert','error','A senha precisa ter no mínimo 8 caracteres.'); return; }
+  if(senha!==senha2){ alertBox('signup-alert','error','As senhas não coincidem.'); return; }
+  const resp = await apiPost({ action:'signup', nome, email, loja, usuario, senha });
+  if(!resp.ok){ alertBox('signup-alert','error', resp.erro); return; }
+  alertBox('signup-alert','success','Cadastro enviado! Usuário e senha já definidos — aguarde a autorização de um Master.');
+}
+
+async function doForgot(){
+  const email=document.getElementById('forgot-email').value.trim();
+  if(!email){ alertBox('forgot-alert','error','Informe o e-mail cadastrado.'); return; }
+  await apiPost({ action:'forgotPassword', email, appUrl: window.location.href });
+  alertBox('forgot-alert','success','Se o e-mail estiver cadastrado, um link de redefinição foi enviado.');
+}
+
+function logout(){ currentUser=null; showScreen('screen-login'); show('login-view'); }
+
+function abrirAdmin(){ showScreen('screen-master'); showAdminTab('cadastro'); loadMasterData(); }
+
+/* ============================================================
+ * SELECTS DINÂMICOS (nova loja / novo comprador)
+ * ============================================================ */
+function addNewOption(selectId, promptText){
+  const value = window.prompt(promptText);
+  if(!value || !value.trim()) return;
+  const select = document.getElementById(selectId);
+  const opt = document.createElement('option');
+  opt.value = value.trim(); opt.textContent = value.trim();
+  select.appendChild(opt); select.value = value.trim();
+}
+
+/* ============================================================
+ * PRODUTOS (multi-item + código de barras + cronômetro)
+ * ============================================================ */
+let productCount = 0;
+const products = {};
+
+function productTemplate(id, num){
+  return `
+  <div class="product-card" id="product-${id}">
+    <div class="product-card-head">
+      <div class="p-title"><span class="p-num">${num}</span> Produto ${num}</div>
+      ${num>1 ? `<button class="btn-remove-product" type="button" onclick="removeProduct(${id})">remover</button>` : ''}
+    </div>
+    <label>Código de barras (EAN/GTIN)</label>
+    <div class="barcode-row">
+      <div><input type="text" id="barcode-input-${id}" placeholder="Digite ou escaneie" inputmode="numeric" maxlength="14" oninput="validateAndPreview(${id}, this.value)"></div>
+      <button class="btn-scan" type="button" onclick="openCamera('barcode', ${id})">📷 Escanear</button>
+    </div>
+    <div class="barcode-preview" id="barcode-preview-${id}">
+      <svg id="barcode-svg-${id}" width="120" height="40" viewBox="0 0 120 40"></svg>
+      <div><b id="bc-code-${id}">—</b><span>Código validado</span></div>
+    </div>
+    <label>Descrição do produto</label>
+    <textarea rows="2" id="desc-${id}" placeholder="Marca, embalagem, detalhes..."></textarea>
+    <div class="grid2">
+      <div><label>Quantidade</label><input type="number" id="qtd-${id}" min="1"></div>
+      <div><label>Motivo da rebaixa</label>
+        <select id="motivo-${id}"><option>Vencimento próximo</option><option>Avaria na embalagem</option><option>Baixo giro / encalhe</option><option>Concorrência de preço</option></select>
+      </div>
+    </div>
+    <label>Data de vencimento do produto</label>
+    <input type="date" id="venc-${id}" onchange="updateCountdown(${id})">
+    <div class="due-preview" id="countdown-${id}"><span class="due-empty">Informe a data de vencimento para ativar o cronômetro.</span></div>
+  </div>`;
+}
+function addProduto(){
+  productCount++;
+  const id = productCount;
+  document.getElementById('produtos-container').insertAdjacentHTML('beforeend', productTemplate(id, Object.keys(products).length+1));
+  products[id] = {};
+  renumberProducts();
+}
+function removeProduct(id){
+  const el = document.getElementById('product-'+id); if(el) el.remove();
+  delete products[id]; renumberProducts();
+}
+function renumberProducts(){
+  const cards = document.querySelectorAll('.product-card');
+  cards.forEach((card,i) => {
+    card.querySelector('.p-title').innerHTML = `<span class="p-num">${i+1}</span> Produto ${i+1}`;
+    const btn = card.querySelector('.btn-remove-product');
+    if(btn) btn.style.display = cards.length===1 ? 'none' : 'inline';
+  });
+}
+function drawBarcodeSVG(id, code){
+  const svg = document.getElementById('barcode-svg-'+id); if(!svg) return;
+  svg.innerHTML=''; let x=3;
+  for(let i=0;i<code.length;i++){
+    const d = parseInt(code[i]) || ((code.charCodeAt(i)%9)+1);
+    const barW = 1 + (d%3);
+    if(d%2===0){
+      const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      r.setAttribute('x',x); r.setAttribute('y',2); r.setAttribute('width',barW); r.setAttribute('height',32); r.setAttribute('fill','#072772');
+      svg.appendChild(r);
+    }
+    x += barW+1.2; if(x>116) break;
+  }
+}
+function validateAndPreview(id, code){
+  const clean = code.replace(/\D/g,'');
+  const preview = document.getElementById('barcode-preview-'+id);
+  if(clean.length<8){ preview.classList.remove('show'); return; }
+  drawBarcodeSVG(id, clean);
+  document.getElementById('bc-code-'+id).textContent = clean;
+  preview.classList.add('show');
+}
+function calcDaysLeft(dateStr){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const due=new Date(dateStr+'T00:00:00');
+  return Math.ceil((due-today)/86400000);
+}
+function dueInfo(dias){
+  if(dias===null||dias===undefined||isNaN(dias)) return { cls:'', label:'—' };
+  if(dias<0) return { cls:'urgent', label:`Vencido há ${Math.abs(dias)}d` };
+  if(dias<7) return { cls:'urgent', label:`${dias} dia(s) restante(s)` };
+  if(dias<=15) return { cls:'warn', label:`${dias} dias restantes` };
+  return { cls:'ok', label:`${dias} dias restantes` };
+}
+function updateCountdown(id){
+  const val = document.getElementById('venc-'+id).value;
+  const box = document.getElementById('countdown-'+id);
+  if(!val){ box.innerHTML = '<span class="due-empty">Informe a data de vencimento para ativar o cronômetro.</span>'; return; }
+  const days = calcDaysLeft(val);
+  const info = dueInfo(days);
+  box.innerHTML = `<span class="due-pill ${info.cls}"><span class="dot"></span>${info.label}</span>`;
+}
+setInterval(() => Object.keys(products).forEach(id => { if(document.getElementById('venc-'+id)) updateCountdown(id); }), 60000);
+
+/* ============================================================
+ * CÂMERA (foto de evidência + leitura de código de barras)
+ * ============================================================ */
+let camStream=null, camMode='photo', camTargetProductId=null;
+async function openCamera(mode, productId){
+  camMode=mode; camTargetProductId=productId;
+  const overlay=document.getElementById('cam-overlay'), video=document.getElementById('cam-video');
+  const errorSlot=document.getElementById('cam-error-slot'), live=document.getElementById('cam-controls-live'), review=document.getElementById('cam-controls-review'), canvas=document.getElementById('cam-canvas');
+  errorSlot.innerHTML=''; video.style.display='block'; canvas.style.display='none'; live.style.display='flex'; review.style.display='none';
+  overlay.classList.add('show');
+  document.getElementById('cam-hint').textContent = mode==='barcode' ? 'Centralize o código de barras e capture.' : 'Enquadre a evidência do produto e capture.';
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({ video:{facingMode:'environment'}, audio:false });
+    video.srcObject = camStream;
+  } catch(err){
+    errorSlot.innerHTML = `<div class="cam-error">Não foi possível acessar a câmera. Anexe um arquivo em vez disso.</div>`;
+    live.style.display='none'; video.style.display='none';
+  }
+}
+function takeShot(){
+  const video=document.getElementById('cam-video'), canvas=document.getElementById('cam-canvas');
+  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+  video.style.display='none'; canvas.style.display='block';
+  document.getElementById('cam-controls-live').style.display='none';
+  document.getElementById('cam-controls-review').style.display='flex';
+}
+function retakeShot(){
+  document.getElementById('cam-video').style.display='block';
+  document.getElementById('cam-canvas').style.display='none';
+  document.getElementById('cam-controls-live').style.display='flex';
+  document.getElementById('cam-controls-review').style.display='none';
+}
+function useShot(){
+  const canvas=document.getElementById('cam-canvas');
+  const dataUrl = canvas.toDataURL('image/jpeg',0.85);
+  if(camMode==='barcode'){
+    const id=camTargetProductId;
+    const decoded = '7891000' + Math.floor(100000+Math.random()*899999);
+    const input = document.getElementById('barcode-input-'+id);
+    if(input){ input.value=decoded; validateAndPreview(id, decoded); }
+  } else {
+    files.push({ name:'foto_'+(files.length+1)+'.jpg', thumb:dataUrl });
+    renderFiles();
+  }
+  closeCamera();
+}
+function closeCamera(){
+  document.getElementById('cam-overlay').classList.remove('show');
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+}
+
+/* ============================================================
+ * ANEXOS
+ * ============================================================ */
+let files = [];
+function handleFiles(fileList){
+  Array.from(fileList).forEach(f => {
+    if(f.type && f.type.startsWith('image/')){
+      const reader=new FileReader();
+      reader.onload=e=>{ files.push({name:f.name, thumb:e.target.result}); renderFiles(); };
+      reader.readAsDataURL(f);
+    } else { files.push({name:f.name, thumb:null}); renderFiles(); }
+  });
+}
+function renderFiles(){
+  document.getElementById('file-list').innerHTML = files.map((f,i)=>`
+    <div class="file-chip"><span>${f.thumb?`<img src="${f.thumb}">`:'📄 '}${f.name}</span><span class="remove" onclick="removeFile(${i})">remover</span></div>
+  `).join('');
+}
+function removeFile(i){ files.splice(i,1); renderFiles(); }
+
+/* ============================================================
+ * COLABORADOR: enviar demanda + minhas solicitações
+ * ============================================================ */
+async function enviarDemanda(){
+  const loja = document.getElementById('dm-loja').value;
+  const comprador = document.getElementById('dm-comprador').value;
+  const ids = Object.keys(products);
+  if(ids.length===0){ alertBox('demanda-alert','error','Adicione ao menos um produto.'); return; }
+
+  const itens = ids.map(id => ({
+    codigoBarras: document.getElementById('barcode-input-'+id)?.value || '',
+    descricao: document.getElementById('desc-'+id)?.value || '',
+    quantidade: document.getElementById('qtd-'+id)?.value || '',
+    motivo: document.getElementById('motivo-'+id)?.value || '',
+    dataVencimento: document.getElementById('venc-'+id)?.value || '',
+    fotos: files.map(f=>f.name),
+  }));
+
+  const diasMin = Math.min(...itens.map(i => i.dataVencimento ? calcDaysLeft(i.dataVencimento) : 999));
+  const urgencia = diasMin<7 ? 'high' : diasMin<=15 ? 'med' : 'low';
+
+  const resp = await apiPost({ action:'createDemanda', loja, comprador, solicitante: currentUser.nome, urgencia, itens });
+  if(!resp.ok){ alertBox('demanda-alert','error', resp.erro||'Erro ao enviar.'); return; }
+
+  alertBox('demanda-alert','success','Solicitação enviada! O comprador foi notificado por e-mail.');
+  document.getElementById('produtos-container').innerHTML='';
+  Object.keys(products).forEach(k=>delete products[k]);
+  productCount=0; files=[]; renderFiles();
+  addProduto();
+  loadColaboradorData();
+}
+
+async function loadColaboradorData(){
+  const users = await apiGet('listUsers');
+  if(!Array.isArray(users)){ return; }
+  allUsers = users;
+  const compradores = users.filter(u => u.perfil==='master');
+  document.getElementById('dm-comprador').innerHTML = compradores.map(c=>`<option>${c.nome}</option>`).join('');
+
+  const demandas = await apiGet('listDemandas');
+  if(!Array.isArray(demandas)) return;
+  allDemandas = demandas;
+  const minhas = demandas.filter(d => d.solicitante === currentUser.nome);
+  document.getElementById('minhas-demandas-tbody').innerHTML = minhas.map(d => {
+    const dias = earliestDueDays(d);
+    const info = dueInfo(dias);
+    return `<tr><td>${d.loja}</td><td>${d.comprador}</td>
+      <td><span class="status-pill ${d.status}">${statusLabel(d.status)}</span></td>
+      <td><span class="due-pill ${info.cls}"><span class="dot"></span>${info.label}</span></td></tr>`;
+  }).join('') || '<tr><td colspan="4"><div class="empty-state">Nenhuma solicitação ainda.</div></td></tr>';
+
+  if(document.getElementById('produtos-container').children.length===0) addProduto();
+}
+
+function earliestDueDays(demanda){
+  const itens = demanda.itens || [];
+  const dias = itens.map(i => i.dataVencimento ? calcDaysLeft(i.dataVencimento) : null).filter(d=>d!==null);
+  return dias.length ? Math.min(...dias) : null;
+}
+function statusLabel(s){ return s==='aberto'?'Aberto':s==='atendido'?'Atendido':'Não atendido'; }
+
+/* ============================================================
+ * ADMIN: TABS
+ * ============================================================ */
+function showAdminTab(name){
+  document.querySelectorAll('.adminview').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('adminview-'+name).classList.add('active');
+  document.getElementById('tab-btn-'+name).classList.add('active');
+  if(name==='indicadores') renderIndicadores();
+}
+
+/* ============================================================
+ * ADMIN: USUÁRIOS
+ * ============================================================ */
+async function loadMasterData(){
+  const users = await apiGet('listUsers');
+  if(Array.isArray(users)){
+    allUsers = users;
+    renderUsers();
+  }
+  const demandas = await apiGet('listDemandas');
+  if(Array.isArray(demandas)){
+    allDemandas = demandas;
+    populateFilters();
+    renderDemandas();
+  }
+}
+function renderUsers(){
+  document.getElementById('users-tbody').innerHTML = allUsers.map(u => `
+    <tr><td>${u.nome}</td><td>${u.email}</td><td>${u.usuario}</td>
+    <td><span class="role-badge ${u.perfil}">${u.perfil==='master'?'Master':'Colaborador'}</span></td>
+    <td>${u.loja||'—'}</td>
+    <td><span class="status-pill ${u.status==='ativo'?'atendido':'aberto'}">${u.status==='ativo'?'Ativo':'Pendente'}</span></td>
+    <td style="text-align:right;">${u.status==='pendente'
+      ? `<button class="btn-mini" style="border-color:var(--verde-ok);color:var(--verde-ok);" onclick="approveUser('${u.id}')">Autorizar</button>`
+      : `<button class="btn-mini" style="border-color:var(--vermelho);color:var(--vermelho);" onclick="revokeUser('${u.id}')">Revogar</button>`}</td></tr>
+  `).join('') || '<tr><td colspan="7"><div class="empty-state">Nenhum usuário.</div></td></tr>';
+
+  const pendentes = allUsers.filter(u=>u.status==='pendente').length;
+  document.getElementById('pending-badge').textContent = pendentes>0 ? pendentes : '';
+}
+async function approveUser(id){
+  const resp = await apiPost({ action:'approveUser', id });
+  if(!resp.ok){ alertBox('users-alert','error', resp.erro); return; }
+  alertBox('users-alert','success','Usuário autorizado. E-mail enviado.');
+  loadMasterData();
+}
+async function revokeUser(id){
+  const resp = await apiPost({ action:'revokeUser', id });
+  if(!resp.ok){ alertBox('users-alert','error', resp.erro); return; }
+  alertBox('users-alert','success','Acesso revogado.');
+  loadMasterData();
+}
+function openNewUserModal(){
+  document.getElementById('nu-nome').value='';
+  document.getElementById('nu-email').value='';
+  document.getElementById('nu-user').value='';
+  document.getElementById('nu-perfil').value='colaborador';
+  openModal('modal-new-user');
+}
+async function createUser(){
+  const nome=document.getElementById('nu-nome').value.trim();
+  const email=document.getElementById('nu-email').value.trim();
+  const usuario=document.getElementById('nu-user').value.trim();
+  const perfil=document.getElementById('nu-perfil').value;
+  if(!nome||!email||!usuario){ alertBox('users-alert','error','Preencha nome, e-mail e usuário.'); return; }
+  const resp = await apiPost({ action:'createUser', nome, email, usuario, perfil });
+  if(!resp.ok){ alertBox('users-alert','error', resp.erro); return; }
+  closeModal('modal-new-user');
+  alertBox('users-alert','success','Usuário cadastrado e autorizado. Credenciais enviadas por e-mail.');
+  loadMasterData();
+}
+
+/* ============================================================
+ * ADMIN: CONTROLE DE DEMANDAS
+ * ============================================================ */
+function populateFilters(){
+  const lojas = [...new Set(allDemandas.map(d=>d.loja))];
+  const compradores = [...new Set(allDemandas.map(d=>d.comprador))];
+  document.getElementById('filter-loja').innerHTML = '<option value="">Todas as lojas</option>' + lojas.map(l=>`<option>${l}</option>`).join('');
+  document.getElementById('filter-comprador').innerHTML = '<option value="">Todos os compradores</option>' + compradores.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('rd-comprador').innerHTML = allUsers.filter(u=>u.perfil==='master').map(u=>`<option>${u.nome}</option>`).join('');
+}
+function slaInfo(dataAbertura){
+  if(!dataAbertura) return { cls:'', label:'—' };
+  const horas = Math.round((new Date() - new Date(dataAbertura)) / 36e5);
+  if(horas>48) return { cls:'urgent', label:'Prazo expirado' };
+  const restante = 48-horas;
+  return { cls: restante<=12?'warn':'ok', label: `${restante}h restantes` };
+}
+function renderDemandas(){
+  const fLoja=document.getElementById('filter-loja').value;
+  const fComprador=document.getElementById('filter-comprador').value;
+  const fStatus=document.getElementById('filter-status').value;
+
+  let filtradas = allDemandas.filter(d =>
+    (!fLoja || d.loja===fLoja) && (!fComprador || d.comprador===fComprador) && (!fStatus || d.status===fStatus)
+  );
+  filtradas.sort((a,b) => (earliestDueDays(a)??999) - (earliestDueDays(b)??999));
+
+  const abertas = filtradas.filter(d=>d.status!=='atendido' && d.status!=='naoatendido');
+  const fechadas = filtradas.filter(d=>d.status==='atendido' || d.status==='naoatendido');
+
+  document.getElementById('demandas-abertas-tbody').innerHTML = abertas.map(d => {
+    const due = dueInfo(earliestDueDays(d));
+    const sla = slaInfo(d.dataAbertura);
+    return `<tr class="clickable" onclick="openDetail('${d.id}')">
+      <td>${d.loja}</td><td>${d.comprador}</td>
+      <td>${(d.urgencia||'low')==='high'?'Alta':(d.urgencia==='med'?'Média':'Baixa')}</td>
+      <td><span class="due-pill ${sla.cls}"><span class="dot"></span>${sla.label}</span></td>
+      <td><span class="due-pill ${due.cls}"><span class="dot"></span>${due.label}</span></td>
+      <td style="text-align:right;" onclick="event.stopPropagation();">
+        <button class="btn-mini" onclick="openRespondModal('${d.id}')">✉️ Responder</button>
+        <button class="btn-mini" onclick="openRedirectModal('${d.id}')">🔁 Redirecionar</button>
+      </td></tr>`;
+  }).join('') || '<tr><td colspan="6"><div class="empty-state">Nenhuma solicitação em aberto.</div></td></tr>';
+
+  document.getElementById('demandas-fechadas-tbody').innerHTML = fechadas.map(d => {
+    const due = dueInfo(earliestDueDays(d));
+    return `<tr class="clickable" onclick="openDetail('${d.id}')">
+      <td>${d.loja}</td><td>${d.comprador}</td>
+      <td><span class="status-pill ${d.status}">${statusLabel(d.status)}</span></td>
+      <td><span class="due-pill ${due.cls}"><span class="dot"></span>${due.label}</span></td>
+      <td style="text-align:right;" onclick="event.stopPropagation();"><button class="btn-mini" onclick="openRedirectModal('${d.id}')">🔁 Redirecionar</button></td></tr>`;
+  }).join('') || '<tr><td colspan="5"><div class="empty-state">Nenhuma solicitação fechada ainda.</div></td></tr>';
+}
+
+/* ---- detalhe ---- */
+function openDetail(id){
+  const d = allDemandas.find(x=>x.id===id); if(!d) return;
+  const due = dueInfo(earliestDueDays(d));
+  const itens = d.itens || [];
+  const comentarios = d.comentarios || [];
+
+  const itensHTML = itens.map(i => `
+    <div class="detail-obs"><b>${i.descricao||'Produto'}</b> — ${i.quantidade||'?'} un. · EAN ${i.codigoBarras||'—'} · motivo: ${i.motivo||'—'} · vencimento: ${i.dataVencimento||'—'}</div>
+  `).join('') || '<p style="font-size:12.5px;color:#999;">Nenhum item registrado.</p>';
+
+  const comentariosHTML = comentarios.length
+    ? comentarios.map(c=>`<div class="comment"><div class="c-meta">${c.autor} · ${new Date(c.data).toLocaleString('pt-BR')}</div>${c.texto}</div>`).join('')
+    : '<p style="font-size:12.5px;color:#999;">Nenhum comentário ainda.</p>';
+
+  document.getElementById('detail-content').innerHTML = `
+    <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+    <h3>${d.loja} — ${d.comprador}</h3>
+    <p class="sub">Solicitante: ${d.solicitante} · Aberta em ${d.dataAbertura ? new Date(d.dataAbertura).toLocaleString('pt-BR') : '—'}</p>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="di-label">Status</div><div class="di-value"><span class="status-pill ${d.status}">${statusLabel(d.status)}</span></div></div>
+      <div class="detail-item"><div class="di-label">Vencimento</div><div class="di-value"><span class="due-pill ${due.cls}"><span class="dot"></span>${due.label}</span></div></div>
+      ${d.precoRebaixa ? `<div class="detail-item"><div class="di-label">Preço aprovado</div><div class="di-value">R$ ${d.precoRebaixa}</div></div>` : ''}
+    </div>
+    <div class="section-title">Produtos</div>
+    ${itensHTML}
+    <div class="section-title">Observação final</div>
+    <div class="detail-obs">${d.observacaoFinal || 'Nenhuma observação registrada.'}</div>
+    <div class="section-title">Histórico</div>
+    ${comentariosHTML}
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-detail')">Fechar</button>
+      ${d.status!=='atendido' ? `<button class="btn-ghost" style="border-color:var(--verde-ok);color:var(--verde-ok);" onclick="closeModal('modal-detail'); openRespondModal('${d.id}');">✉️ Responder</button>` : ''}
+    </div>`;
+  openModal('modal-detail');
+}
+
+/* ---- responder ---- */
+let respondTargetId = null;
+function openRespondModal(id){
+  respondTargetId = id;
+  const d = allDemandas.find(x=>x.id===id); if(!d) return;
+  document.getElementById('respond-sub').innerHTML = `Solicitação de <b>${d.solicitante}</b> (${d.loja}). O solicitante recebe e-mail automaticamente.`;
+  document.querySelector('input[name="respond-type"][value="atendido"]').checked = true;
+  document.getElementById('rs-preco').value='';
+  document.getElementById('rs-validade').value='';
+  document.getElementById('rs-obs-positivo').value='';
+  document.getElementById('rs-obs-negativo').value='';
+  toggleRespondFields();
+  openModal('modal-respond');
+}
+function toggleRespondFields(){
+  const tipo = document.querySelector('input[name="respond-type"]:checked').value;
+  document.getElementById('fields-positivo').classList.toggle('show', tipo==='atendido');
+  document.getElementById('fields-negativo').classList.toggle('show', tipo==='naoatendido');
+}
+async function confirmRespond(){
+  const tipo = document.querySelector('input[name="respond-type"]:checked').value;
+  let payload = { action:'respondDemanda', id: respondTargetId, tipo, comprador: currentUser.nome };
+  if(tipo==='atendido'){
+    const preco = document.getElementById('rs-preco').value.trim();
+    if(!preco){ alertBox('controle-alert','warn','Informe o novo preço antes de enviar.'); return; }
+    payload.preco = preco;
+    payload.validade = document.getElementById('rs-validade').value;
+    payload.observacao = document.getElementById('rs-obs-positivo').value.trim();
+  } else {
+    const obs = document.getElementById('rs-obs-negativo').value.trim();
+    if(!obs){ alertBox('controle-alert','warn','Descreva o motivo da recusa.'); return; }
+    payload.observacao = obs;
+  }
+  const resp = await apiPost(payload);
+  if(!resp.ok){ alertBox('controle-alert','error', resp.erro); return; }
+  closeModal('modal-respond');
+  alertBox('controle-alert','success','Resposta enviada. E-mail disparado para a origem da solicitação.');
+  loadMasterData();
+}
+
+/* ---- redirecionar ---- */
+let redirectTargetId = null;
+function openRedirectModal(id){
+  redirectTargetId = id;
+  const d = allDemandas.find(x=>x.id===id);
+  document.getElementById('rd-comprador').value = d ? d.comprador : '';
+  document.getElementById('rd-obs').value='';
+  openModal('modal-redirect');
+}
+async function confirmRedirect(){
+  const novoComprador = document.getElementById('rd-comprador').value;
+  const observacao = document.getElementById('rd-obs').value.trim();
+  const resp = await apiPost({ action:'redirectDemanda', id: redirectTargetId, novoComprador, observacao });
+  if(!resp.ok){ alertBox('controle-alert','error', resp.erro); return; }
+  closeModal('modal-redirect');
+  alertBox('controle-alert','success','Redirecionado. E-mails de aviso enviados aos envolvidos.');
+  loadMasterData();
+}
+
+/* ============================================================
+ * ADMIN: INDICADORES (Chart.js)
+ * ============================================================ */
+let chartInstances = {};
+function destroyChart(id){ if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
+function countBy(arr, keyFn){ const m={}; arr.forEach(x=>{ const k=keyFn(x); m[k]=(m[k]||0)+1; }); return m; }
+function sumBy(arr, keyFn, valFn){ const m={}; arr.forEach(x=>{ const k=keyFn(x); m[k]=(m[k]||0)+valFn(x); }); return m; }
+function baseBarOptions(){ return { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0}}} }; }
+
+function renderIndicadores(){
+  const total = allDemandas.length;
+  const atendidas = allDemandas.filter(d=>d.status==='atendido').length;
+  document.getElementById('ind-total').textContent = total;
+  document.getElementById('ind-taxa').textContent = total ? Math.round(atendidas/total*100)+'%' : '0%';
+  document.getElementById('ind-lojas').textContent = new Set(allDemandas.map(d=>d.loja)).size;
+  document.getElementById('ind-urgentes').textContent = allDemandas.filter(d => { const dd=earliestDueDays(d); return dd!==null && dd<7; }).length;
+
+  const porLoja = countBy(allDemandas, d=>d.loja);
+  destroyChart('chart-loja');
+  chartInstances['chart-loja'] = new Chart(document.getElementById('chart-loja'), { type:'bar', data:{ labels:Object.keys(porLoja), datasets:[{data:Object.values(porLoja), backgroundColor:'#0C2E84', borderRadius:6}] }, options: baseBarOptions() });
+
+  const porComprador = countBy(allDemandas, d=>(d.comprador||'').split(' — ')[0]);
+  destroyChart('chart-comprador');
+  chartInstances['chart-comprador'] = new Chart(document.getElementById('chart-comprador'), { type:'bar', data:{ labels:Object.keys(porComprador), datasets:[{data:Object.values(porComprador), backgroundColor:'#F9E109', borderRadius:6}] }, options: baseBarOptions() });
+
+  const porStatus = countBy(allDemandas, d=>statusLabel(d.status));
+  destroyChart('chart-status');
+  chartInstances['chart-status'] = new Chart(document.getElementById('chart-status'), { type:'doughnut', data:{ labels:Object.keys(porStatus), datasets:[{data:Object.values(porStatus), backgroundColor:['#0C2E84','#1F8A4C','#A61309']}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:11,font:{size:10.5}}}}} });
+
+  const motivos = [];
+  allDemandas.forEach(d => (d.itens||[]).forEach(i => { if(i.motivo) motivos.push(i.motivo); }));
+  const porMotivo = countBy(motivos, m=>m);
+  destroyChart('chart-motivo');
+  chartInstances['chart-motivo'] = new Chart(document.getElementById('chart-motivo'), { type:'pie', data:{ labels:Object.keys(porMotivo), datasets:[{data:Object.values(porMotivo), backgroundColor:['#0C2E84','#F9E109','#1F8A4C','#A61309','#5C8AE6']}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:11,font:{size:10}}}}} });
+
+  const produtos = [];
+  allDemandas.forEach(d => (d.itens||[]).forEach(i => { if(i.descricao) produtos.push(i); }));
+  const porProduto = sumBy(produtos, i=>i.descricao, i=>Number(i.quantidade)||0);
+  const ordenados = Object.entries(porProduto).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  destroyChart('chart-produtos');
+  chartInstances['chart-produtos'] = new Chart(document.getElementById('chart-produtos'), { type:'bar', data:{ labels:ordenados.map(p=>p[0]), datasets:[{data:ordenados.map(p=>p[1]), backgroundColor:'#5C8AE6', borderRadius:6}] }, options:{...baseBarOptions(), indexAxis:'y'} });
+}
+
+/* ============================================================
+ * INIT
+ * ============================================================ */
+addProduto();
+</script>
+</body>
+</html>
